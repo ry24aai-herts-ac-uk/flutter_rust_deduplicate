@@ -4,3 +4,5 @@
 #include <stdlib.h>
 
 const char *blake3_hash_file(const char *path);
+
+void free_string(char *s);

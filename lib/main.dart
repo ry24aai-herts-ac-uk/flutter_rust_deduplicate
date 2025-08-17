@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -46,14 +47,17 @@ class _MyHomePageState extends State<MyHomePage> {
               path.endsWith('.png') ||
               path.endsWith('.gif')) {
             final pathPtr = path.toNativeUtf8();
-            final hashPtr = blake3HashFile(pathPtr);
-            final hash = hashPtr.toDartString();
+            final resultPtr = blake3HashFile(pathPtr);
+            final resultJson = resultPtr.toDartString();
+            freeString(resultPtr.cast());
+            final resultData = jsonDecode(resultJson);
             malloc.free(pathPtr);
             setState(() {
               _hashRows.add(DataRow(cells: [
-                DataCell(Text(path.split('/').last)),
-                DataCell(Text(path)),
-                DataCell(Text(hash)),
+                DataCell(Text(resultData['file_name'])),
+                DataCell(Text(resultData['file_path'])),
+                DataCell(Text(resultData['blake3_hash'])),
+                DataCell(Text(resultData['is_duplicate'].toString())),
               ]));
             });
           }
@@ -74,11 +78,13 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Expanded(
               child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: const [
                     DataColumn(label: Text('File Name')),
                     DataColumn(label: Text('Path')),
                     DataColumn(label: Text('Blake3 Hash')),
+                    DataColumn(label: Text('Is Duplicate')),
                   ],
                   rows: _hashRows,
                 ),
